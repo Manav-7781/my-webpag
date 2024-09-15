@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign-Up, Login, and Table Generator</title>
+    <title>Login, Table Generator, and Word Export</title>
     <style>
         table, th, td {
             border: 1px solid black;
@@ -15,6 +15,9 @@
         }
         td[contenteditable] {
             background-color: #f0f0f0;
+        }
+        #textAreaSection {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -70,6 +73,14 @@
         <button id="copyTableBtn" style="display: none;">Copy Table</button>
     </div>
 
+    <!-- Text Area for Pasting Content and Download as Word -->
+    <div id="textAreaSection" style="display: none;">
+        <h1>Paste Content to Export as Word</h1>
+        <textarea id="contentArea" rows="10" cols="50" placeholder="Paste your content here..."></textarea>
+        <br><br>
+        <button id="downloadWordBtn">Download as Word</button>
+    </div>
+
     <script>
         // Simple sign-up form functionality (store user in localStorage)
         document.getElementById('formSignup').addEventListener('submit', function(event) {
@@ -103,6 +114,7 @@
                 document.getElementById('loginMessage').innerText = 'Login successful!';
                 document.getElementById('loginForm').style.display = 'none';  // Hide the login form
                 document.getElementById('tableSection').style.display = 'block';  // Show the table generator section
+                document.getElementById('textAreaSection').style.display = 'block';  // Show the text area for content pasting
             } else {
                 document.getElementById('loginMessage').innerText = 'Invalid username or password. Please try again.';
             }
@@ -154,6 +166,33 @@
             }
 
             selection.removeAllRanges();
+        });
+
+        // Word document download functionality
+        document.getElementById('downloadWordBtn').addEventListener('click', function() {
+            const content = document.getElementById('contentArea').value;
+
+            // Create a blob for the word content
+            const blob = new Blob([`
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+                <head><meta charset="utf-8"><title>Export HTML to Word</title></head>
+                <body>
+                <div style="font-family: Times New Roman; font-size: 12pt;">
+                    ${content.replace(/\n/g, '<br>')}
+                </div>
+                </body>
+                </html>
+            `], {
+                type: 'application/msword'
+            });
+
+            // Create download link
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'exported-content.doc';
+
+            // Trigger download
+            link.click();
         });
     </script>
 
