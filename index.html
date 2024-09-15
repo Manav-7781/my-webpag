@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up and Table Generator</title>
+    <title>Login and Table Generator</title>
     <style>
         table, th, td {
             border: 1px solid black;
@@ -20,60 +20,60 @@
 </head>
 <body>
 
-    <h1>Create an Account</h1>
-    <form id="signupForm">
+    <h1>Login</h1>
+    <form id="loginForm">
         <label for="username">Username:</label>
         <input type="text" id="username" name="username" required>
         <br><br>
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
         <br><br>
-        <button type="submit">Sign Up</button>
+        <button type="submit">Login</button>
     </form>
-    <div id="signupMessage"></div>
+    <div id="loginMessage"></div>
 
     <hr>
 
-    <h1>Generate a Table</h1>
-    <form id="tableForm">
-        <label for="rows">Number of Rows:</label>
-        <input type="number" id="rows" name="rows" min="1" required>
-        <br><br>
-        <label for="columns">Number of Columns:</label>
-        <input type="number" id="columns" name="columns" min="1" required>
-        <br><br>
-        <button type="submit">Create Table</button>
-    </form>
+    <!-- Table Generator (Hidden until user logs in) -->
+    <div id="tableSection" style="display: none;">
+        <h1>Generate a Table</h1>
+        <form id="tableForm">
+            <label for="rows">Number of Rows:</label>
+            <input type="number" id="rows" name="rows" min="1" required>
+            <br><br>
+            <label for="columns">Number of Columns:</label>
+            <input type="number" id="columns" name="columns" min="1" required>
+            <br><br>
+            <button type="submit">Create Table</button>
+        </form>
 
-    <div id="tableContainer"></div>
-    <br>
-    <button id="copyTableBtn" style="display: none;">Copy Table</button>
+        <div id="tableContainer"></div>
+        <br>
+        <button id="copyTableBtn" style="display: none;">Copy Table</button>
+    </div>
 
     <script>
-        // Sign-up form functionality (existing code)
-        document.getElementById('signupForm').addEventListener('submit', function(event) {
+        // Hardcoded user credentials for simplicity (you can replace this with a backend system)
+        const validUsername = 'user';
+        const validPassword = 'password';
+
+        // Login form functionality
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            fetch('/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = 'login.html';
-                } else {
-                    document.getElementById('signupMessage').innerText = data.message;
-                }
-            });
+            // Simple authentication check
+            if (username === validUsername && password === validPassword) {
+                document.getElementById('loginMessage').innerText = 'Login successful!';
+                document.getElementById('loginForm').style.display = 'none';  // Hide the login form
+                document.getElementById('tableSection').style.display = 'block';  // Show the table generator section
+            } else {
+                document.getElementById('loginMessage').innerText = 'Invalid username or password. Please try again.';
+            }
         });
 
-        // Table generation functionality
+        // Table generation functionality (only after login)
         document.getElementById('tableForm').addEventListener('submit', function(event) {
             event.preventDefault();
             
