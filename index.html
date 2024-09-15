@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word to PDF Converter</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <title>Word to PDF Converter (CloudConvert)</title>
     <style>
         #uploadSection {
             margin-top: 20px;
@@ -29,51 +27,53 @@
     <div id="message"></div>
 
     <script>
-        let wordContent = '';
+        const apiKey = 'YOUR_CLOUDCONVERT_API_KEY';  // Insert your CloudConvert API key here
+        let wordFile = null;
 
-        // Handle file input and extract content using Mammoth
+        // Handle file input and store the file
         document.getElementById('fileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
             
             if (file && file.name.endsWith('.docx')) {
-                const reader = new FileReader();
-                
-                reader.onload = function(event) {
-                    const arrayBuffer = reader.result;
-                    mammoth.extractRawText({arrayBuffer: arrayBuffer})
-                        .then(function(result) {
-                            wordContent = result.value;
-                            document.getElementById('message').innerText = 'Word file loaded successfully!';
-                            document.getElementById('convertBtn').disabled = false;  // Enable convert button
-                        })
-                        .catch(function(err) {
-                            document.getElementById('message').innerText = 'Error reading the Word file.';
-                            console.error(err);
-                        });
-                };
-                
-                reader.readAsArrayBuffer(file);
+                wordFile = file;
+                document.getElementById('message').innerText = 'Word file selected: ' + file.name;
+                document.getElementById('convertBtn').disabled = false;  // Enable convert button
             } else {
                 document.getElementById('message').innerText = 'Please upload a valid .docx file.';
+                document.getElementById('convertBtn').disabled = true;
             }
         });
 
-        // Convert to PDF using jsPDF
-        document.getElementById('convertBtn').addEventListener('click', function() {
-            if (wordContent) {
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF();
+        // Convert to PDF using CloudConvert API
+        document.getElementById('convertBtn').addEventListener('click', async function() {
+            if (wordFile) {
+                document.getElementById('message').innerText = 'Converting file to PDF...';
 
-                // Split the text into lines to avoid overflowing
-                const lines = pdf.splitTextToSize(wordContent, 180);
+                try {
+                    const formData = new FormData();
+                    formData.append('file', wordFile);
+                    
+                    // Make API request to CloudConvert for conversion
+                    const response = await fetch('https://api.cloudconvert.com/v2/convert', {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${apiKey}`,
+                        },
+                        body: formData
+                    });
 
-                // Add content to PDF
-                pdf.text(10, 10, lines);
+                    const result = await response.json();
 
-                // Download the PDF
-                pdf.save('converted-file.pdf');
-            } else {
-                document.getElementById('message').innerText = 'No content to convert!';
+                    if (response.ok) {
+                        // Provide download link to user
+                        document.getElementById('message').innerHTML = `<a href="${result.url}" target="_blank">Download your PDF</a>`;
+                    } else {
+                        document.getElementById('message').innerText = 'Error converting the file.';
+                    }
+                } catch (err) {
+                    document.getElementById('message').innerText = 'An error occurred during the conversion process.';
+                    console.error(err);
+                }
             }
         });
     </script>
