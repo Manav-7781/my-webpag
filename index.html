@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up and Table Generator</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        td[contenteditable] {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Create an Account</h1>
+    <form id="signupForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <br><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br><br>
+        <button type="submit">Sign Up</button>
+    </form>
+    <div id="signupMessage"></div>
+
+    <hr>
+
+    <h1>Generate a Table</h1>
+    <form id="tableForm">
+        <label for="rows">Number of Rows:</label>
+        <input type="number" id="rows" name="rows" min="1" required>
+        <br><br>
+        <label for="columns">Number of Columns:</label>
+        <input type="number" id="columns" name="columns" min="1" required>
+        <br><br>
+        <button type="submit">Create Table</button>
+    </form>
+
+    <div id="tableContainer"></div>
+    <br>
+    <button id="copyTableBtn" style="display: none;">Copy Table</button>
+
+    <script>
+        // Sign-up form functionality (existing code)
+        document.getElementById('signupForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = 'login.html';
+                } else {
+                    document.getElementById('signupMessage').innerText = data.message;
+                }
+            });
+        });
+
+        // Table generation functionality
+        document.getElementById('tableForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const rows = parseInt(document.getElementById('rows').value);
+            const columns = parseInt(document.getElementById('columns').value);
+
+            // Create an editable table
+            let table = '<table>';
+            for (let i = 0; i < rows; i++) {
+                table += '<tr>';
+                for (let j = 0; j < columns; j++) {
+                    table += `<td contenteditable="true">Row ${i + 1}, Col ${j + 1}</td>`;
+                }
+                table += '</tr>';
+            }
+            table += '</table>';
+
+            // Display the table
+            document.getElementById('tableContainer').innerHTML = table;
+
+            // Show the Copy Table button
+            document.getElementById('copyTableBtn').style.display = 'block';
+        });
+
+        // Copy Table Functionality
+        document.getElementById('copyTableBtn').addEventListener('click', function() {
+            const table = document.querySelector('#tableContainer table');
+            const range = document.createRange();
+            range.selectNode(table);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('Table copied to clipboard!');
+                } else {
+                    alert('Failed to copy table.');
+                }
+            } catch (err) {
+                alert('Browser does not support copying.');
+            }
+
+            selection.removeAllRanges();
+        });
+    </script>
+
+</body>
+</html>
