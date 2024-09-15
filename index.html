@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login, Sign Up, Table Generator, and Word Export</title>
+    <title>Login, Sign Up, Table Generator, Paraphraser, and Word Export</title>
     <style>
         table, th, td {
             border: 1px solid black;
@@ -73,12 +73,17 @@
         <button id="copyTableBtn" style="display: none;">Copy Table</button>
     </div>
 
-    <!-- Text Area for Pasting Content and Download as Word -->
+    <!-- Text Area for Pasting Content and Paraphrasing -->
     <div id="textAreaSection" style="display: none;">
-        <h1>Paste Content to Export as Word</h1>
+        <h1>Paste Content to Paraphrase</h1>
         <textarea id="contentArea" rows="10" cols="50" placeholder="Paste your content here..."></textarea>
         <br><br>
-        <button id="downloadWordBtn">Download as Word</button>
+        <button id="paraphraseBtn">Paraphrase</button>
+        <br><br>
+        <h2>Paraphrased Content:</h2>
+        <textarea id="paraphrasedArea" rows="10" cols="50" readonly></textarea>
+        <br><br>
+        <button id="downloadWordBtn" style="display: none;">Download as Word</button>
     </div>
 
     <script>
@@ -127,57 +132,30 @@
             }
         });
 
-        // Table generation functionality (only after login)
-        document.getElementById('tableForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            const rows = parseInt(document.getElementById('rows').value);
-            const columns = parseInt(document.getElementById('columns').value);
+        // Paraphrase functionality (placeholder)
+        document.getElementById('paraphraseBtn').addEventListener('click', async function() {
+            const content = document.getElementById('contentArea').value;
 
-            // Create an editable table
-            let table = '<table>';
-            for (let i = 0; i < rows; i++) {
-                table += '<tr>';
-                for (let j = 0; j < columns; j++) {
-                    table += `<td contenteditable="true">Row ${i + 1}, Col ${j + 1}</td>`;
-                }
-                table += '</tr>';
-            }
-            table += '</table>';
+            // Replace this placeholder with a call to a paraphrasing API
+            const paraphrasedContent = await fakeParaphrase(content); // Placeholder
 
-            // Display the table
-            document.getElementById('tableContainer').innerHTML = table;
+            // Display paraphrased content in the paraphrasedArea textarea
+            document.getElementById('paraphrasedArea').value = paraphrasedContent;
 
-            // Show the Copy Table button
-            document.getElementById('copyTableBtn').style.display = 'block';
+            // Show the "Download as Word" button
+            document.getElementById('downloadWordBtn').style.display = 'block';
         });
 
-        // Copy Table Functionality
-        document.getElementById('copyTableBtn').addEventListener('click', function() {
-            const table = document.querySelector('#tableContainer table');
-            const range = document.createRange();
-            range.selectNode(table);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    alert('Table copied to clipboard!');
-                } else {
-                    alert('Failed to copy table.');
-                }
-            } catch (err) {
-                alert('Browser does not support copying.');
-            }
-
-            selection.removeAllRanges();
-        });
+        // Fake paraphrasing function (to be replaced with API call)
+        async function fakeParaphrase(content) {
+            // In reality, you would call an API to paraphrase here
+            // For now, it just returns the same content with a simple replacement for demo purposes
+            return content.replace(/\bimportant\b/g, 'crucial'); // Example of simple paraphrasing
+        }
 
         // Word document download functionality
         document.getElementById('downloadWordBtn').addEventListener('click', function() {
-            const content = document.getElementById('contentArea').value;
+            const paraphrasedContent = document.getElementById('paraphrasedArea').value;
 
             // Create a blob for the word content
             const blob = new Blob([`
@@ -185,7 +163,7 @@
                 <head><meta charset="utf-8"><title>Export HTML to Word</title></head>
                 <body>
                 <div style="font-family: Times New Roman; font-size: 12pt;">
-                    ${content.replace(/\n/g, '<br>')}
+                    ${paraphrasedContent.replace(/\n/g, '<br>')}
                 </div>
                 </body>
                 </html>
@@ -196,12 +174,9 @@
             // Create download link
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'exported-content.doc';
+            link.download = 'paraphrased-content.doc';
 
             // Trigger download
             link.click();
         });
-    </script>
-
-</body>
-</html>
+    </script
