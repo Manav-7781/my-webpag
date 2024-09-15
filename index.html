@@ -3,26 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login and Signup with Secure Passwords</title>
+    <title>Table Creator with Login</title>
     <style>
-        #loginForm, #signupForm {
+        #loginForm, #signupForm, #tableForm {
+            display: none;
             margin-top: 20px;
         }
+
+        #tableSection {
+            display: none;
+            margin-top: 20px;
+        }
+
         input, button {
             margin: 5px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+            padding: 8px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Login or Signup</h1>
+    <h1>Login or Signup to Create a Table</h1>
 
-    <!-- Signup Form -->
-    <div id="signupForm">
-        <h3>Sign Up</h3>
-        <input type="text" id="signupUsername" placeholder="Username" required>
-        <input type="password" id="signupPassword" placeholder="Password" required>
-        <button id="submitSignup">Sign Up</button>
+    <!-- Login and Signup Section -->
+    <div id="authSection">
+        <button id="loginBtn">Login</button>
+        <button id="signupBtn">Sign Up</button>
     </div>
 
     <!-- Login Form -->
@@ -33,46 +48,99 @@
         <button id="submitLogin">Login</button>
     </div>
 
+    <!-- Signup Form -->
+    <div id="signupForm">
+        <h3>Sign Up</h3>
+        <input type="text" id="signupUsername" placeholder="Username" required>
+        <input type="password" id="signupPassword" placeholder="Password" required>
+        <button id="submitSignup">Sign Up</button>
+    </div>
+
+    <!-- Table Creation Section -->
+    <div id="tableSection">
+        <h3>Create a Table</h3>
+        <form id="tableForm">
+            <input type="number" id="rows" placeholder="Number of rows" required>
+            <input type="number" id="cols" placeholder="Number of columns" required>
+            <button type="submit">Create Table</button>
+        </form>
+
+        <div id="tableDiv"></div>
+    </div>
+
     <script>
+        // Dummy user data (for simplicity; in a real application, you'd store this securely on a server)
+        let users = [];
+
+        // Show and hide forms based on user actions
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('signupForm').style.display = 'none';
+        });
+
+        document.getElementById('signupBtn').addEventListener('click', () => {
+            document.getElementById('signupForm').style.display = 'block';
+            document.getElementById('loginForm').style.display = 'none';
+        });
+
         // Sign-up logic
-        document.getElementById('submitSignup').addEventListener('click', async () => {
+        document.getElementById('submitSignup').addEventListener('click', () => {
             const username = document.getElementById('signupUsername').value;
             const password = document.getElementById('signupPassword').value;
 
             if (username && password) {
-                const response = await fetch('/signup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
+                const userExists = users.find(user => user.username === username);
 
-                const message = await response.text();
-                alert(message);
+                if (!userExists) {
+                    users.push({ username, password });
+                    alert('Sign-up successful! Please log in.');
+                    document.getElementById('signupForm').style.display = 'none';
+                } else {
+                    alert('Username already exists. Please try another.');
+                }
             } else {
                 alert('Please fill out all fields.');
             }
         });
 
         // Login logic
-        document.getElementById('submitLogin').addEventListener('click', async () => {
+        document.getElementById('submitLogin').addEventListener('click', () => {
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
 
-            if (username && password) {
-                const response = await fetch('/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
+            const user = users.find(user => user.username === username && user.password === password);
 
-                const message = await response.text();
-                alert(message);
+            if (user) {
+                alert('Login successful!');
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('tableSection').style.display = 'block';
             } else {
-                alert('Please fill out all fields.');
+                alert('Invalid username or password.');
+            }
+        });
+
+        // Table creation logic
+        document.getElementById('tableForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const rows = parseInt(document.getElementById('rows').value);
+            const cols = parseInt(document.getElementById('cols').value);
+
+            if (rows > 0 && cols > 0) {
+                let table = '<table><tbody>';
+                
+                for (let i = 0; i < rows; i++) {
+                    table += '<tr>';
+                    for (let j = 0; j < cols; j++) {
+                        table += `<td contenteditable="true">Cell</td>`;
+                    }
+                    table += '</tr>';
+                }
+
+                table += '</tbody></table>';
+                document.getElementById('tableDiv').innerHTML = table;
+            } else {
+                alert('Please enter valid numbers for rows and columns.');
             }
         });
     </script>
