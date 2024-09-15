@@ -3,78 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word to PDF Converter (CloudConvert)</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <title>Login and Signup with Secure Passwords</title>
     <style>
-        #uploadSection {
+        #loginForm, #signupForm {
             margin-top: 20px;
         }
-        #fileInput {
-            margin-bottom: 10px;
+        input, button {
+            margin: 5px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Upload Word File and Convert to PDF</h1>
+    <h1>Login or Signup</h1>
 
-    <!-- File Upload Section -->
-    <div id="uploadSection">
-        <input type="file" id="fileInput" accept=".docx" />
-        <br>
-        <button id="convertBtn" disabled>Convert to PDF</button>
+    <!-- Signup Form -->
+    <div id="signupForm">
+        <h3>Sign Up</h3>
+        <input type="text" id="signupUsername" placeholder="Username" required>
+        <input type="password" id="signupPassword" placeholder="Password" required>
+        <button id="submitSignup">Sign Up</button>
     </div>
 
-    <div id="message"></div>
+    <!-- Login Form -->
+    <div id="loginForm">
+        <h3>Login</h3>
+        <input type="text" id="loginUsername" placeholder="Username" required>
+        <input type="password" id="loginPassword" placeholder="Password" required>
+        <button id="submitLogin">Login</button>
+    </div>
 
     <script>
-        const apiKey = 'YOUR_ACTUAL_API_KEY_HERE';  // Replace this with your actual API key
-        let wordFile = null;
+        // Sign-up logic
+        document.getElementById('submitSignup').addEventListener('click', async () => {
+            const username = document.getElementById('signupUsername').value;
+            const password = document.getElementById('signupPassword').value;
 
-        // Handle file input and store the file
-        document.getElementById('fileInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            
-            if (file && file.name.endsWith('.docx')) {
-                wordFile = file;
-                document.getElementById('message').innerText = 'Word file selected: ' + file.name;
-                document.getElementById('convertBtn').disabled = false;  // Enable convert button
+            if (username && password) {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const message = await response.text();
+                alert(message);
             } else {
-                document.getElementById('message').innerText = 'Please upload a valid .docx file.';
-                document.getElementById('convertBtn').disabled = true;
+                alert('Please fill out all fields.');
             }
         });
 
-        // Convert to PDF using CloudConvert API
-        document.getElementById('convertBtn').addEventListener('click', async function() {
-            if (wordFile) {
-                document.getElementById('message').innerText = 'Converting file to PDF...';
+        // Login logic
+        document.getElementById('submitLogin').addEventListener('click', async () => {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
 
-                try {
-                    const formData = new FormData();
-                    formData.append('file', wordFile);
-                    
-                    // Make API request to CloudConvert for conversion
-                    const response = await fetch('https://api.cloudconvert.com/v2/convert', {
-                        method: 'POST',
-                        headers: {
-                            Authorization: `Bearer ${apiKey}`,
-                        },
-                        body: formData
-                    });
+            if (username && password) {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
 
-                    const result = await response.json();
-
-                    if (response.ok) {
-                        // Provide download link to user
-                        document.getElementById('message').innerHTML = `<a href="${result.url}" target="_blank">Download your PDF</a>`;
-                    } else {
-                        document.getElementById('message').innerText = 'Error converting the file.';
-                    }
-                } catch (err) {
-                    document.getElementById('message').innerText = 'An error occurred during the conversion process.';
-                    console.error(err);
-                }
+                const message = await response.text();
+                alert(message);
+            } else {
+                alert('Please fill out all fields.');
             }
         });
     </script>
