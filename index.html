@@ -3,145 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Table Creator with Login</title>
+    <title>Sign-Up, Login, and Table Generator</title>
     <style>
-        #loginForm, #signupForm, #tableForm {
-            display: none;
-            margin-top: 20px;
-        }
-
-        #tableSection {
-            display: none;
-            margin-top: 20px;
-        }
-
-        input, button {
-            margin: 5px;
-        }
-
-        table {
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
         table, th, td {
             border: 1px solid black;
-            padding: 8px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        td[contenteditable] {
+            background-color: #f0f0f0;
         }
     </style>
 </head>
 <body>
 
-    <h1>Login or Signup to Create a Table</h1>
-
-    <!-- Login and Signup Section -->
-    <div id="authSection">
-        <button id="loginBtn">Login</button>
-        <button id="signupBtn">Sign Up</button>
+    <!-- Sign Up Form -->
+    <div id="signupForm">
+        <h1>Sign Up</h1>
+        <form id="formSignup">
+            <label for="signupUsername">Username:</label>
+            <input type="text" id="signupUsername" name="signupUsername" required>
+            <br><br>
+            <label for="signupPassword">Password:</label>
+            <input type="password" id="signupPassword" name="signupPassword" required>
+            <br><br>
+            <button type="submit">Sign Up</button>
+        </form>
+        <div id="signupMessage"></div>
     </div>
 
     <!-- Login Form -->
-    <div id="loginForm">
-        <h3>Login</h3>
-        <input type="text" id="loginUsername" placeholder="Username" required>
-        <input type="password" id="loginPassword" placeholder="Password" required>
-        <button id="submitLogin">Login</button>
+    <div id="loginForm" style="display: none;">
+        <h1>Login</h1>
+        <form id="formLogin">
+            <label for="loginUsername">Username:</label>
+            <input type="text" id="loginUsername" name="loginUsername" required>
+            <br><br>
+            <label for="loginPassword">Password:</label>
+            <input type="password" id="loginPassword" name="loginPassword" required>
+            <br><br>
+            <button type="submit">Login</button>
+        </form>
+        <div id="loginMessage"></div>
     </div>
 
-    <!-- Signup Form -->
-    <div id="signupForm">
-        <h3>Sign Up</h3>
-        <input type="text" id="signupUsername" placeholder="Username" required>
-        <input type="password" id="signupPassword" placeholder="Password" required>
-        <button id="submitSignup">Sign Up</button>
-    </div>
+    <hr>
 
-    <!-- Table Creation Section -->
-    <div id="tableSection">
-        <h3>Create a Table</h3>
+    <!-- Table Generator (Hidden until user logs in) -->
+    <div id="tableSection" style="display: none;">
+        <h1>Generate a Table</h1>
         <form id="tableForm">
-            <input type="number" id="rows" placeholder="Number of rows" required>
-            <input type="number" id="cols" placeholder="Number of columns" required>
+            <label for="rows">Number of Rows:</label>
+            <input type="number" id="rows" name="rows" min="1" required>
+            <br><br>
+            <label for="columns">Number of Columns:</label>
+            <input type="number" id="columns" name="columns" min="1" required>
+            <br><br>
             <button type="submit">Create Table</button>
         </form>
 
-        <div id="tableDiv"></div>
+        <div id="tableContainer"></div>
+        <br>
+        <button id="copyTableBtn" style="display: none;">Copy Table</button>
     </div>
 
     <script>
-        // Dummy user data (for simplicity; in a real application, you'd store this securely on a server)
-        let users = [];
-
-        // Show and hide forms based on user actions
-        document.getElementById('loginBtn').addEventListener('click', () => {
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('signupForm').style.display = 'none';
-        });
-
-        document.getElementById('signupBtn').addEventListener('click', () => {
-            document.getElementById('signupForm').style.display = 'block';
-            document.getElementById('loginForm').style.display = 'none';
-        });
-
-        // Sign-up logic
-        document.getElementById('submitSignup').addEventListener('click', () => {
+        // Simple sign-up form functionality (store user in localStorage)
+        document.getElementById('formSignup').addEventListener('submit', function(event) {
+            event.preventDefault();
             const username = document.getElementById('signupUsername').value;
             const password = document.getElementById('signupPassword').value;
 
-            if (username && password) {
-                const userExists = users.find(user => user.username === username);
-
-                if (!userExists) {
-                    users.push({ username, password });
-                    alert('Sign-up successful! Please log in.');
-                    document.getElementById('signupForm').style.display = 'none';
-                } else {
-                    alert('Username already exists. Please try another.');
-                }
+            // Check if username already exists in localStorage
+            if (localStorage.getItem(username)) {
+                document.getElementById('signupMessage').innerText = 'Username already exists. Please choose another one.';
             } else {
-                alert('Please fill out all fields.');
+                // Store the new user's credentials in localStorage
+                localStorage.setItem(username, password);
+                document.getElementById('signupMessage').innerText = 'Sign up successful! Please log in.';
+                
+                // After successful sign-up, switch to login form
+                document.getElementById('signupForm').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
             }
         });
 
-        // Login logic
-        document.getElementById('submitLogin').addEventListener('click', () => {
+        // Login form functionality (checks credentials from localStorage)
+        document.getElementById('formLogin').addEventListener('submit', function(event) {
+            event.preventDefault();
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
 
-            const user = users.find(user => user.username === username && user.password === password);
-
-            if (user) {
-                alert('Login successful!');
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('tableSection').style.display = 'block';
+            // Check if the entered username and password match the stored credentials
+            const storedPassword = localStorage.getItem(username);
+            if (storedPassword === password) {
+                document.getElementById('loginMessage').innerText = 'Login successful!';
+                document.getElementById('loginForm').style.display = 'none';  // Hide the login form
+                document.getElementById('tableSection').style.display = 'block';  // Show the table generator section
             } else {
-                alert('Invalid username or password.');
+                document.getElementById('loginMessage').innerText = 'Invalid username or password. Please try again.';
             }
         });
 
-        // Table creation logic
-        document.getElementById('tableForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-
+        // Table generation functionality (only after login)
+        document.getElementById('tableForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
             const rows = parseInt(document.getElementById('rows').value);
-            const cols = parseInt(document.getElementById('cols').value);
+            const columns = parseInt(document.getElementById('columns').value);
 
-            if (rows > 0 && cols > 0) {
-                let table = '<table><tbody>';
-                
-                for (let i = 0; i < rows; i++) {
-                    table += '<tr>';
-                    for (let j = 0; j < cols; j++) {
-                        table += `<td contenteditable="true">Cell</td>`;
-                    }
-                    table += '</tr>';
+            // Create an editable table
+            let table = '<table>';
+            for (let i = 0; i < rows; i++) {
+                table += '<tr>';
+                for (let j = 0; j < columns; j++) {
+                    table += `<td contenteditable="true">Row ${i + 1}, Col ${j + 1}</td>`;
                 }
-
-                table += '</tbody></table>';
-                document.getElementById('tableDiv').innerHTML = table;
-            } else {
-                alert('Please enter valid numbers for rows and columns.');
+                table += '</tr>';
             }
+            table += '</table>';
+
+            // Display the table
+            document.getElementById('tableContainer').innerHTML = table;
+
+            // Show the Copy Table button
+            document.getElementById('copyTableBtn').style.display = 'block';
+        });
+
+        // Copy Table Functionality
+        document.getElementById('copyTableBtn').addEventListener('click', function() {
+            const table = document.querySelector('#tableContainer table');
+            const range = document.createRange();
+            range.selectNode(table);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('Table copied to clipboard!');
+                } else {
+                    alert('Failed to copy table.');
+                }
+            } catch (err) {
+                alert('Browser does not support copying.');
+            }
+
+            selection.removeAllRanges();
         });
     </script>
 
