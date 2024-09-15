@@ -3,180 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login, Sign Up, Table Generator, Paraphraser, and Word Export</title>
+    <title>Word to PDF Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        table, th, td {
-            border: 1px solid black;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
-        td[contenteditable] {
-            background-color: #f0f0f0;
-        }
-        #textAreaSection {
+        #uploadSection {
             margin-top: 20px;
+        }
+        #fileInput {
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Login Form -->
-    <div id="loginForm">
-        <h1>Login</h1>
-        <form id="formLogin">
-            <label for="loginUsername">Username:</label>
-            <input type="text" id="loginUsername" name="loginUsername" required>
-            <br><br>
-            <label for="loginPassword">Password:</label>
-            <input type="password" id="loginPassword" name="loginPassword" required>
-            <br><br>
-            <button type="submit">Login</button>
-        </form>
-        <div id="loginMessage"></div>
-    </div>
+    <h1>Upload Word File and Convert to PDF</h1>
 
-    <!-- Sign Up Form (Hidden initially) -->
-    <div id="signupForm" style="display: none;">
-        <h1>Sign Up</h1>
-        <form id="formSignup">
-            <label for="signupUsername">Username:</label>
-            <input type="text" id="signupUsername" name="signupUsername" required>
-            <br><br>
-            <label for="signupPassword">Password:</label>
-            <input type="password" id="signupPassword" name="signupPassword" required>
-            <br><br>
-            <button type="submit">Sign Up</button>
-        </form>
-        <div id="signupMessage"></div>
-    </div>
-
-    <hr>
-
-    <!-- Table Generator (Hidden until user logs in) -->
-    <div id="tableSection" style="display: none;">
-        <h1>Generate a Table</h1>
-        <form id="tableForm">
-            <label for="rows">Number of Rows:</label>
-            <input type="number" id="rows" name="rows" min="1" required>
-            <br><br>
-            <label for="columns">Number of Columns:</label>
-            <input type="number" id="columns" name="columns" min="1" required>
-            <br><br>
-            <button type="submit">Create Table</button>
-        </form>
-
-        <div id="tableContainer"></div>
+    <!-- File Upload Section -->
+    <div id="uploadSection">
+        <input type="file" id="fileInput" accept=".docx" />
         <br>
-        <button id="copyTableBtn" style="display: none;">Copy Table</button>
+        <button id="convertBtn" disabled>Convert to PDF</button>
     </div>
 
-    <!-- Text Area for Pasting Content and Paraphrasing -->
-    <div id="textAreaSection" style="display: none;">
-        <h1>Paste Content to Paraphrase</h1>
-        <textarea id="contentArea" rows="10" cols="50" placeholder="Paste your content here..."></textarea>
-        <br><br>
-        <button id="paraphraseBtn">Paraphrase</button>
-        <br><br>
-        <h2>Paraphrased Content:</h2>
-        <textarea id="paraphrasedArea" rows="10" cols="50" readonly></textarea>
-        <br><br>
-        <button id="downloadWordBtn" style="display: none;">Download as Word</button>
-    </div>
+    <div id="message"></div>
 
     <script>
-        // Login form functionality (checks credentials from localStorage)
-        document.getElementById('formLogin').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
+        let wordContent = '';
 
-            // Check if the username exists in localStorage
-            const storedPassword = localStorage.getItem(username);
-            if (storedPassword) {
-                if (storedPassword === password) {
-                    document.getElementById('loginMessage').innerText = 'Login successful!';
-                    document.getElementById('loginForm').style.display = 'none';  // Hide the login form
-                    document.getElementById('tableSection').style.display = 'block';  // Show the table generator section
-                    document.getElementById('textAreaSection').style.display = 'block';  // Show the text area for content pasting
-                } else {
-                    document.getElementById('loginMessage').innerText = 'Incorrect password. Please try again.';
-                }
+        // Handle file input and extract content using Mammoth
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            
+            if (file && file.name.endsWith('.docx')) {
+                const reader = new FileReader();
+                
+                reader.onload = function(event) {
+                    const arrayBuffer = reader.result;
+                    mammoth.extractRawText({arrayBuffer: arrayBuffer})
+                        .then(function(result) {
+                            wordContent = result.value;
+                            document.getElementById('message').innerText = 'Word file loaded successfully!';
+                            document.getElementById('convertBtn').disabled = false;  // Enable convert button
+                        })
+                        .catch(function(err) {
+                            document.getElementById('message').innerText = 'Error reading the Word file.';
+                            console.error(err);
+                        });
+                };
+                
+                reader.readAsArrayBuffer(file);
             } else {
-                // User doesn't exist, show sign up form
-                document.getElementById('loginMessage').innerText = 'User does not exist. Please sign up.';
-                document.getElementById('loginForm').style.display = 'none';  // Hide the login form
-                document.getElementById('signupForm').style.display = 'block';  // Show the sign up form
+                document.getElementById('message').innerText = 'Please upload a valid .docx file.';
             }
         });
 
-        // Simple sign-up form functionality (store user in localStorage)
-        document.getElementById('formSignup').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const username = document.getElementById('signupUsername').value;
-            const password = document.getElementById('signupPassword').value;
+        // Convert to PDF using jsPDF
+        document.getElementById('convertBtn').addEventListener('click', function() {
+            if (wordContent) {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
 
-            // Check if username already exists in localStorage
-            if (localStorage.getItem(username)) {
-                document.getElementById('signupMessage').innerText = 'Username already exists. Please choose another one.';
+                // Split the text into lines to avoid overflowing
+                const lines = pdf.splitTextToSize(wordContent, 180);
+
+                // Add content to PDF
+                pdf.text(10, 10, lines);
+
+                // Download the PDF
+                pdf.save('converted-file.pdf');
             } else {
-                // Store the new user's credentials in localStorage
-                localStorage.setItem(username, password);
-                document.getElementById('signupMessage').innerText = 'Sign up successful! Please log in.';
-
-                // After successful sign-up, switch back to login form
-                document.getElementById('signupForm').style.display = 'none';
-                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('message').innerText = 'No content to convert!';
             }
         });
+    </script>
 
-        // Paraphrase functionality (placeholder)
-        document.getElementById('paraphraseBtn').addEventListener('click', async function() {
-            const content = document.getElementById('contentArea').value;
-
-            // Replace this placeholder with a call to a paraphrasing API
-            const paraphrasedContent = await fakeParaphrase(content); // Placeholder
-
-            // Display paraphrased content in the paraphrasedArea textarea
-            document.getElementById('paraphrasedArea').value = paraphrasedContent;
-
-            // Show the "Download as Word" button
-            document.getElementById('downloadWordBtn').style.display = 'block';
-        });
-
-        // Fake paraphrasing function (to be replaced with API call)
-        async function fakeParaphrase(content) {
-            // In reality, you would call an API to paraphrase here
-            // For now, it just returns the same content with a simple replacement for demo purposes
-            return content.replace(/\bimportant\b/g, 'crucial'); // Example of simple paraphrasing
-        }
-
-        // Word document download functionality
-        document.getElementById('downloadWordBtn').addEventListener('click', function() {
-            const paraphrasedContent = document.getElementById('paraphrasedArea').value;
-
-            // Create a blob for the word content
-            const blob = new Blob([`
-                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-                <head><meta charset="utf-8"><title>Export HTML to Word</title></head>
-                <body>
-                <div style="font-family: Times New Roman; font-size: 12pt;">
-                    ${paraphrasedContent.replace(/\n/g, '<br>')}
-                </div>
-                </body>
-                </html>
-            `], {
-                type: 'application/msword'
-            });
-
-            // Create download link
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'paraphrased-content.doc';
-
-            // Trigger download
-            link.click();
-        });
-    </script
+</body>
+</html>
