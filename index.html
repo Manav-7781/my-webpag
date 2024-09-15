@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login and Table Generator</title>
+    <title>Sign-Up, Login, and Table Generator</title>
     <style>
         table, th, td {
             border: 1px solid black;
@@ -20,17 +20,35 @@
 </head>
 <body>
 
-    <h1>Login</h1>
-    <form id="loginForm">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-        <br><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-        <br><br>
-        <button type="submit">Login</button>
-    </form>
-    <div id="loginMessage"></div>
+    <!-- Sign Up Form -->
+    <div id="signupForm">
+        <h1>Sign Up</h1>
+        <form id="formSignup">
+            <label for="signupUsername">Username:</label>
+            <input type="text" id="signupUsername" name="signupUsername" required>
+            <br><br>
+            <label for="signupPassword">Password:</label>
+            <input type="password" id="signupPassword" name="signupPassword" required>
+            <br><br>
+            <button type="submit">Sign Up</button>
+        </form>
+        <div id="signupMessage"></div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginForm" style="display: none;">
+        <h1>Login</h1>
+        <form id="formLogin">
+            <label for="loginUsername">Username:</label>
+            <input type="text" id="loginUsername" name="loginUsername" required>
+            <br><br>
+            <label for="loginPassword">Password:</label>
+            <input type="password" id="loginPassword" name="loginPassword" required>
+            <br><br>
+            <button type="submit">Login</button>
+        </form>
+        <div id="loginMessage"></div>
+    </div>
 
     <hr>
 
@@ -53,18 +71,35 @@
     </div>
 
     <script>
-        // Hardcoded user credentials for simplicity (you can replace this with a backend system)
-        const validUsername = 'user';
-        const validPassword = 'password';
-
-        // Login form functionality
-        document.getElementById('loginForm').addEventListener('submit', function(event) {
+        // Simple sign-up form functionality (store user in localStorage)
+        document.getElementById('formSignup').addEventListener('submit', function(event) {
             event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const username = document.getElementById('signupUsername').value;
+            const password = document.getElementById('signupPassword').value;
 
-            // Simple authentication check
-            if (username === validUsername && password === validPassword) {
+            // Check if username already exists in localStorage
+            if (localStorage.getItem(username)) {
+                document.getElementById('signupMessage').innerText = 'Username already exists. Please choose another one.';
+            } else {
+                // Store the new user's credentials in localStorage
+                localStorage.setItem(username, password);
+                document.getElementById('signupMessage').innerText = 'Sign up successful! Please log in.';
+                
+                // After successful sign-up, switch to login form
+                document.getElementById('signupForm').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+            }
+        });
+
+        // Login form functionality (checks credentials from localStorage)
+        document.getElementById('formLogin').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            // Check if the entered username and password match the stored credentials
+            const storedPassword = localStorage.getItem(username);
+            if (storedPassword === password) {
                 document.getElementById('loginMessage').innerText = 'Login successful!';
                 document.getElementById('loginForm').style.display = 'none';  // Hide the login form
                 document.getElementById('tableSection').style.display = 'block';  // Show the table generator section
