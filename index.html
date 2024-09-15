@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign-Up, Login, and Table Generator</title>
+    <title>Login, Sign Up, Table Generator, and Word Export</title>
     <style>
         table, th, td {
             border: 1px solid black;
@@ -16,27 +16,15 @@
         td[contenteditable] {
             background-color: #f0f0f0;
         }
+        #textAreaSection {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Sign Up Form -->
-    <div id="signupForm">
-        <h1>Sign Up</h1>
-        <form id="formSignup">
-            <label for="signupUsername">Username:</label>
-            <input type="text" id="signupUsername" name="signupUsername" required>
-            <br><br>
-            <label for="signupPassword">Password:</label>
-            <input type="password" id="signupPassword" name="signupPassword" required>
-            <br><br>
-            <button type="submit">Sign Up</button>
-        </form>
-        <div id="signupMessage"></div>
-    </div>
-
     <!-- Login Form -->
-    <div id="loginForm" style="display: none;">
+    <div id="loginForm">
         <h1>Login</h1>
         <form id="formLogin">
             <label for="loginUsername">Username:</label>
@@ -48,6 +36,21 @@
             <button type="submit">Login</button>
         </form>
         <div id="loginMessage"></div>
+    </div>
+
+    <!-- Sign Up Form (Hidden initially) -->
+    <div id="signupForm" style="display: none;">
+        <h1>Sign Up</h1>
+        <form id="formSignup">
+            <label for="signupUsername">Username:</label>
+            <input type="text" id="signupUsername" name="signupUsername" required>
+            <br><br>
+            <label for="signupPassword">Password:</label>
+            <input type="password" id="signupPassword" name="signupPassword" required>
+            <br><br>
+            <button type="submit">Sign Up</button>
+        </form>
+        <div id="signupMessage"></div>
     </div>
 
     <hr>
@@ -70,7 +73,40 @@
         <button id="copyTableBtn" style="display: none;">Copy Table</button>
     </div>
 
+    <!-- Text Area for Pasting Content and Download as Word -->
+    <div id="textAreaSection" style="display: none;">
+        <h1>Paste Content to Export as Word</h1>
+        <textarea id="contentArea" rows="10" cols="50" placeholder="Paste your content here..."></textarea>
+        <br><br>
+        <button id="downloadWordBtn">Download as Word</button>
+    </div>
+
     <script>
+        // Login form functionality (checks credentials from localStorage)
+        document.getElementById('formLogin').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            // Check if the username exists in localStorage
+            const storedPassword = localStorage.getItem(username);
+            if (storedPassword) {
+                if (storedPassword === password) {
+                    document.getElementById('loginMessage').innerText = 'Login successful!';
+                    document.getElementById('loginForm').style.display = 'none';  // Hide the login form
+                    document.getElementById('tableSection').style.display = 'block';  // Show the table generator section
+                    document.getElementById('textAreaSection').style.display = 'block';  // Show the text area for content pasting
+                } else {
+                    document.getElementById('loginMessage').innerText = 'Incorrect password. Please try again.';
+                }
+            } else {
+                // User doesn't exist, show sign up form
+                document.getElementById('loginMessage').innerText = 'User does not exist. Please sign up.';
+                document.getElementById('loginForm').style.display = 'none';  // Hide the login form
+                document.getElementById('signupForm').style.display = 'block';  // Show the sign up form
+            }
+        });
+
         // Simple sign-up form functionality (store user in localStorage)
         document.getElementById('formSignup').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -84,27 +120,10 @@
                 // Store the new user's credentials in localStorage
                 localStorage.setItem(username, password);
                 document.getElementById('signupMessage').innerText = 'Sign up successful! Please log in.';
-                
-                // After successful sign-up, switch to login form
+
+                // After successful sign-up, switch back to login form
                 document.getElementById('signupForm').style.display = 'none';
                 document.getElementById('loginForm').style.display = 'block';
-            }
-        });
-
-        // Login form functionality (checks credentials from localStorage)
-        document.getElementById('formLogin').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const username = document.getElementById('loginUsername').value;
-            const password = document.getElementById('loginPassword').value;
-
-            // Check if the entered username and password match the stored credentials
-            const storedPassword = localStorage.getItem(username);
-            if (storedPassword === password) {
-                document.getElementById('loginMessage').innerText = 'Login successful!';
-                document.getElementById('loginForm').style.display = 'none';  // Hide the login form
-                document.getElementById('tableSection').style.display = 'block';  // Show the table generator section
-            } else {
-                document.getElementById('loginMessage').innerText = 'Invalid username or password. Please try again.';
             }
         });
 
@@ -154,6 +173,33 @@
             }
 
             selection.removeAllRanges();
+        });
+
+        // Word document download functionality
+        document.getElementById('downloadWordBtn').addEventListener('click', function() {
+            const content = document.getElementById('contentArea').value;
+
+            // Create a blob for the word content
+            const blob = new Blob([`
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+                <head><meta charset="utf-8"><title>Export HTML to Word</title></head>
+                <body>
+                <div style="font-family: Times New Roman; font-size: 12pt;">
+                    ${content.replace(/\n/g, '<br>')}
+                </div>
+                </body>
+                </html>
+            `], {
+                type: 'application/msword'
+            });
+
+            // Create download link
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'exported-content.doc';
+
+            // Trigger download
+            link.click();
         });
     </script>
 
