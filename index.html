@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Table with Login and Word Export</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.1.0/docx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.1/dist/pizzip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.22.2/build/docxtemplater.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -155,32 +157,51 @@
         // Download table as Word document
         document.getElementById('downloadWordBtn').addEventListener('click', () => {
             const table = document.querySelector('table');
-            const doc = new docx.Document({
-                sections: [{
-                    properties: {},
-                    children: [
-                        new docx.Table({
-                            rows: Array.from(table.rows).map(row => {
-                                return new docx.TableRow({
-                                    children: Array.from(row.cells).map(cell => {
-                                        return new docx.TableCell({
-                                            children: [new docx.Paragraph(cell.innerText)],
-                                        });
-                                    }),
-                                });
-                            }),
-                        }),
-                    ],
-                }],
+            const rows = table.rows;
+            let tableContent = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                const rowContent = [];
+                for (let j = 0; j < rows[i].cells.length; j++) {
+                    rowContent.push(rows[i].cells[j].innerText);
+                }
+                tableContent.push(rowContent);
+            }
+
+            generateWordDocument(tableContent);
+        });
+
+        // Function to generate Word document
+        function generateWordDocument(tableContent) {
+            const zip = new PizZip();
+            const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+
+            const tableRows = tableContent.map(row => {
+                return {
+                    cells: row.map(cell => ({ text: cell }))
+                };
             });
 
-            docx.Packer.toBlob(doc).then(blob => {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'table.docx';
-                link.click();
-            });
-        });
+            const content = {
+                rows: tableRows
+            };
+
+            doc.loadZip(zip);
+            doc.setData(content);
+
+            try {
+                doc.render();
+                const out = doc.getZip().generate({
+                    type: 'blob',
+                    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                });
+                saveAs(out, 'table.docx');
+            } catch (error) {
+                console.error(error);
+                alert('Error generating Word file.');
+            }
+        }
     </script>
+
 </body>
 </html>
